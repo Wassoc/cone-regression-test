@@ -46,7 +46,8 @@ max_idx = df1.iloc[:, 2].idxmax()
 # Remove all rows after max_idx
 df1 = df1.iloc[:max_idx+1]
 # Read the cone CSV file
-df2 = pd.read_csv(csv_file2, skiprows=0)
+# skip a couple of rows in case of potential bad data
+df2 = pd.read_csv(csv_file2, skiprows=2)
 
 # Convert timestamp column to datetime and then to epoch time in milliseconds
 df1.iloc[:, 0] = pd.to_datetime(df1.iloc[:, 0]).astype('int64') // 10**6
@@ -103,6 +104,7 @@ results_file = open(os.path.join(output_dir, output_file), 'w')
 results_file.write('Sleeve_Pressure,Tip_Pressure,Base_Pressure\n')
 
 # Find matching rows in df2 for each timestamp in closest_df
+output = True
 if closest_df is not None:
     print("\nMatching rows from cone data:")
     for idx, row in closest_df.iterrows():
@@ -110,6 +112,9 @@ if closest_df is not None:
         pressure = row.iloc[1]
         closest_timestamp_index = (df2.iloc[:, 0] - timestamp).abs().idxmin()
         if closest_timestamp_index is not None:
+            if output:
+                print(closest_timestamp_index)
+                output = False
             results_file.write(f"{df2.iloc[closest_timestamp_index, 3]},{df2.iloc[closest_timestamp_index, 4]},{pressure}\n")
         else:
             print(f"\nNo match found for timestamp {timestamp}")
